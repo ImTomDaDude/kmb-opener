@@ -138,8 +138,8 @@
         <h1>🚌 KMB 網站快速開啟器</h1>
         
         <div class="input-group">
-            <label for="plateNumber">車牌號碼 (XXXXXX)</label>
-            <input type="text" id="plateNumber" placeholder="例如: AB1234" maxlength="6">
+            <label for="plateNumber">車牌號碼 (2–8 位，英數字)</label>
+            <input type="text" id="plateNumber" placeholder="例如: AB123456" maxlength="8" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="latin">
         </div>
 
         <div class="input-group">
@@ -181,32 +181,42 @@
             document.getElementById('plateNumber').addEventListener('input', updateUrlPreview);
         });
 
+        function sanitizePlate(raw) {
+            return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+        }
+
         function updateUrlPreview() {
-            const plateNumber = document.getElementById('plateNumber').value.toUpperCase();
+            const input = document.getElementById('plateNumber');
+            const sanitized = sanitizePlate(input.value);
+            if (input.value !== sanitized) {
+                input.value = sanitized;
+            }
+
+            const plateNumber = sanitized;
             const urlPreview = document.getElementById('urlPreview');
             const errorMessage = document.getElementById('errorMessage');
             
-            if (plateNumber) {
+            if (plateNumber.length >= 2 && plateNumber.length <= 8) {
                 const url = `https://kmblsqr.top/api/kmb/${plateNumber}_${selectedLetter}`;
                 urlPreview.textContent = url;
                 errorMessage.textContent = '';
-            } else {
+            } else if (plateNumber.length === 0) {
                 urlPreview.textContent = '預覽網址將顯示在這裡...';
+                errorMessage.textContent = '';
+            } else {
+                urlPreview.textContent = '請輸入 2–8 位英數字車牌';
                 errorMessage.textContent = '';
             }
         }
 
         function openWebsite() {
-            const plateNumber = document.getElementById('plateNumber').value.trim().toUpperCase();
+            const input = document.getElementById('plateNumber');
+            const plateNumber = sanitizePlate(input.value.trim());
             const errorMessage = document.getElementById('errorMessage');
             
-            if (!plateNumber) {
-                errorMessage.textContent = '請輸入車牌號碼';
-                return;
-            }
-
-            if (plateNumber.length < 1) {
-                errorMessage.textContent = '車牌號碼太短';
+            if (plateNumber.length < 2 || plateNumber.length > 8) {
+                errorMessage.textContent = '請輸入 2–8 位英數字車牌';
+                input.focus();
                 return;
             }
 
